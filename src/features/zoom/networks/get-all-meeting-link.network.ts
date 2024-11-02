@@ -1,4 +1,4 @@
-import { serverAPI } from "@/lib/network";
+import { appAPI } from "@/lib/network";
 
 
 export interface Meeting {
@@ -14,7 +14,7 @@ export interface Meeting {
 
 export async function getAllMeetings() {
   try {
-    const resp = await serverAPI.get("/api/meeting/all");
+    const resp = await appAPI.get("/api/meeting/all");
     const body = resp.data as { data: Meeting[] };
     return body;
   } catch (error) {

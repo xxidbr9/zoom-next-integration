@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
+import { zoomAPI } from '@/lib/server-network';
 
 export async function GET() {
   try {
     // Fetch all meetings from the database
     const meetings = await prisma.meeting.findMany();
+    // const req = await zoomAPI.get("/users/me/meetings")
     
     // Respond with the meetings data
     return NextResponse.json({ data: meetings }, { status: 200 });

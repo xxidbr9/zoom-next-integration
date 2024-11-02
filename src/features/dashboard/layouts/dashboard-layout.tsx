@@ -41,16 +41,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { signOut } from 'next-auth/react'
 import { createMeetingLink, getAllMeetings, Meeting } from '@/features/zoom/networks'
 import { toast } from 'sonner'
 
-// Mock data for the table
-const initialMeetings = [
-  { id: 1, topic: 'Project Kickoff', agenda: 'Discuss project goals', meetingLink: 'https://meet.com/123', startTime: new Date('2023-06-10T10:00:00'), duration: 60, createdAt: new Date('2023-06-01T09:00:00') },
-  { id: 2, topic: 'Weekly Standup', agenda: 'Team updates', meetingLink: 'https://meet.com/456', startTime: new Date('2023-06-11T09:00:00'), duration: 30, createdAt: new Date('2023-06-02T14:00:00') },
-  { id: 3, topic: 'Client Presentation', agenda: 'Present project progress', meetingLink: 'https://meet.com/789', startTime: new Date('2023-06-12T14:00:00'), duration: 90, createdAt: new Date('2023-06-03T11:00:00') },
-]
 
 const formSchema = z.object({
   topic: z.string().min(1, { message: "Topic is required" }),
@@ -78,7 +71,6 @@ export default function Component() {
     },
   })
   useEffect(() => {
-    console.log({ data });
     setMeetings(data?.data || [])
   }, [data])
 
@@ -125,7 +117,6 @@ export default function Component() {
     console.log('New meeting button clicked')
   }
 
-  const handleLogout = async () => await signOut({ redirectTo: "/" })
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value.toLowerCase()
@@ -156,9 +147,9 @@ export default function Component() {
           />
         </div>
         <div className='flex gap-x-2'>
-          <Button onClick={handleLogout} variant={"outline"}>
+          {/* <Button onClick={handleLogout} variant={"outline"}>
             <LogOut className="mr-2 h-4 w-4" /> Sign Out
-          </Button>
+          </Button> */}
           <Button onClick={handleNewMeeting}>
             <Plus className="mr-2 h-4 w-4" /> New Meeting
           </Button>

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     // Log the incoming request body
-    console.log("Incoming Webhook Request:", body);
+    console.log("Incoming Webhook Request:", JSON.stringify(body, null, 2));
     let resp;
     // Webhook request event type is a challenge-response check
     if (body.event === 'endpoint.url_validation') {

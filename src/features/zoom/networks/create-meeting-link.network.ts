@@ -1,8 +1,8 @@
-import { serverAPI } from "@/lib/network";
+import { appAPI } from "@/lib/network";
 
 export async function createMeetingLink(data: { topic: string, start_time: string | Date, agenda: string, duration: number }) {
   try {
-    const resp = await serverAPI.post("/api/meeting/create", {
+    const resp = await appAPI.post("/api/meeting/create", {
       data
     })
     const body = resp.data;

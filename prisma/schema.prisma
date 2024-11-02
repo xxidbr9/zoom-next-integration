@@ -25,30 +25,38 @@ model meeting {
   start_time DateTime
   duration   Int
 
-  create_at     DateTime @default(now())
-  zoom_url String
-  zoom_id  String
-  // meeting_transcript meeting_transcript[]
-  // meeting_recorder meeting_recorder[]
+  create_at DateTime @default(now())
+  zoom_url  String
+  zoom_id   String
+
+  meeting_transcript meeting_transcript[]
+  meeting_recorder   meeting_recorder[]
 }
 
-// model meeting_transcript {
-//   id Int @id @default(autoincrement())
-//   meeting_detail meeting @relation(fields: [meeting_id], references: [id])
-//   meeting_id Int 
-//   date  DateTime @default(now())
+model meeting_transcript {
+  id             Int      @id @default(autoincrement())
+  meeting_detail meeting  @relation(fields: [meeting_id], references: [id])
+  meeting_id     Int
+  create_at      DateTime @default(now())
 
-//   // other data
-//   transcripts String? @db.Text
-//   original_transcript_fiel_url String?
-// }
+  // other data
+  transcripts                  String? @db.Text
+  original_transcript_file_url String?
+}
 
-// model meeting_recorder {
-//   id Int @id @default(autoincrement())
-//   meeting_detail meeting @relation(fields: [meeting_id], references: [id])
-//   meeting_id Int
-//   date  DateTime @default(now())
+model meeting_recorder {
+  id             Int      @id @default(autoincrement())
+  meeting_detail meeting  @relation(fields: [meeting_id], references: [id])
+  meeting_id     Int
+  create_at      DateTime @default(now())
 
-//   // other data
+  // other data
+  original_transcript_file_url String?
+}
 
-// }
+model zoom_access_token {
+  id           String   @id @unique
+  access_token String
+  expire_at    DateTime
+  update_at    DateTime @updatedAt
+}

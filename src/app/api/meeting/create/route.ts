@@ -1,10 +1,11 @@
 import { auth } from "@/features/auth/services";
 import { CreatedMeetingResponse } from "@/features/zoom/models";
-import { zoomAPI } from "@/lib/network";
+import { zoomAPI } from "@/lib/server-network";
 import { prisma } from "@/lib/prisma";
 import { AxiosError, AxiosResponse } from "axios";
-
+import fs from 'fs'
 import { NextRequest, NextResponse } from 'next/server';
+import path from "path";
 
 
 export async function POST(req: NextRequest) {
@@ -20,7 +21,6 @@ export async function POST(req: NextRequest) {
     // Call createMeeting to make the Zoom API request
     const response = await createMeeting({ topic, start_time, agenda, duration });
     const meetingData = response.data as CreatedMeetingResponse;
-
     // Store the meeting data in Prisma
     try {
 
@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
           zoom_url: meetingData.join_url,
         },
       });
-
       return NextResponse.json({ data: { meeting: newMeeting, zoom_meeting: meetingData } }, { status: 200 });
     } catch (error) {
       console.log({ error });

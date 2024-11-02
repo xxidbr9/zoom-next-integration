@@ -9,8 +9,9 @@ export default function Home() {
 
   const router = useRouter()
   useEffect(() => {
-    if (session?.accessToken) router.replace("/dashboard")
-  }, [session])
+    // if (session?.accessToken) router.replace("/dashboard")
+    router.replace("/dashboard")
+  }, [])
   const handleLogin = () => signIn("zoom")
 
   return (
