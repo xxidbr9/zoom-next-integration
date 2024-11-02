@@ -41,7 +41,6 @@ async function downloadAndStoreVTT(transcript: Transcript) {
     }
   })
 
-
   if (!existingMeeting) return;
 
   const myHeaders = new Headers();
@@ -61,7 +60,7 @@ async function downloadAndStoreVTT(transcript: Transcript) {
     if (record_file.file_type !== "TRANSCRIPT") continue;
 
     const resp = await fetch(
-      "https://us06web.zoom.us/rec/webhook_download/cs4ehoOQgO-HvufxJn2pieGp2rJyw-cnjp4KUKX5FV7jvT18AGBmRQdkLx8DK-mqVW-e4EnVIuOY4F9c.YCk9Zq4Kl_rBWhrP/nQ07vnez1wf32SbD-RrJ89vYV9QNdpnnWZo5ZZV11bE0Oue9QiRUsqruEKCPXqRQcvWF31VpwcN3G6jVtIptvrfe6sUOJdj_5iGdKddBy2RzZWdRKDnMeYjkPyfBc9ib9XRpmoYr-Kf-lyshMY8trKRbCYiws51DJkkODVhLtIVRr1dnvm-BU3k5T_hgxBRRQyBQzDMZ8-qnvK71E1pRkrcXIankoPDjn3UlvUUHhHUVphfbkCXeB2tsOMQn1c62DocgxnQ1K1yLgyA021gBiaFAHoldo7lvWLoMCCXH3IHrPX4jSh0e6rHP9OlAx_jVnxtz__6vhRPqpM29HpttbA",
+      record_file.download_url,
       requestOptions
     )
     const transcriptText = await resp.text()
