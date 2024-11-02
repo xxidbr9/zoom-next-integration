@@ -51,7 +51,8 @@ model meeting_recorder {
   create_at      DateTime @default(now())
 
   // other data
-  original_transcript_file_url String?
+  file_password String?
+  original_file_url String?
 }
 
 model zoom_access_token {

@@ -10,6 +10,10 @@ export interface Meeting {
   zoom_url: string;
   zoom_id: string;
   create_at: string; // or Date if you're handling Date objects
+  _count: {
+    meeting_recorder: number,
+    meeting_transcript: number
+  }
 }
 
 export async function getAllMeetings() {

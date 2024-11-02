@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     // Log the incoming request body
     console.log("Incoming Webhook Request:", JSON.stringify(body, null, 2));
-    let resp;
+    let resp = {};
     // Webhook request event type is a challenge-response check
     if (body.event === 'endpoint.url_validation') {
       const hashForValidate = crypto.createHmac('sha256', process.env.ZOOM_WEBHOOK_SECRET as string).update(body.payload.plainToken).digest('hex')

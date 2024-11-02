@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/table"
 import { createMeetingLink, getAllMeetings, Meeting } from '@/features/zoom/networks'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 
 const formSchema = z.object({
@@ -73,7 +74,7 @@ export default function Component() {
   useEffect(() => {
     setMeetings(data?.data || [])
   }, [data])
-
+  const router = useRouter()
   // Handling loading state
   if (isLoading) {
     return <div>Loading...</div>;
@@ -133,6 +134,10 @@ export default function Component() {
     }
   }
 
+  const handleViewFiles = (id: string) => {
+    router.push(`/dashboard/meeting/${id}`)
+  }
+
   return (
     <div className="container m-auto p-4">
       <div className="flex justify-between items-center mb-4">
@@ -185,8 +190,8 @@ export default function Component() {
               <TableCell>{format(meeting.create_at, 'yyyy-MM-dd HH:mm')}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
-                  <Button variant="outline" onClick={() => { }}>
-                    <Eye className="h-4 w-4" /> <span>View</span>
+                  <Button variant="outline" disabled={meeting._count.meeting_recorder <= 0 && meeting._count.meeting_transcript <= 0} onClick={() => handleViewFiles(meeting.id.toString())}>
+                    <Eye className="h-4 w-4" /> <span>View Files ({meeting._count.meeting_recorder + meeting._count.meeting_transcript})</span>
                   </Button>
                   {/* <Button variant="outline" size="icon" onClick={() => { }}>
                     <Pencil className="h-4 w-4" />
