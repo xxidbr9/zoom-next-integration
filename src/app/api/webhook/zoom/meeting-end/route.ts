@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,9 +8,18 @@ export async function POST(req: NextRequest) {
 
     // Log the incoming request body
     console.log("Incoming Webhook Request:", body);
+    let resp;
+    // Webhook request event type is a challenge-response check
+    if (body.event === 'endpoint.url_validation') {
+      const hashForValidate = crypto.createHmac('sha256', process.env.ZOOM_WEBHOOK_SECRET as string).update(body.payload.plainToken).digest('hex')
 
+      resp = {
+        "plainToken": body.payload.plainToken,
+        "encryptedToken": hashForValidate
+      }
+    }
     // Return a 200 OK response to acknowledge receipt
-    return NextResponse.json({ message: "Webhook received" }, { status: 200 });
+    return NextResponse.json(resp, { status: 200 });
   } catch (error) {
     console.error("Error processing webhook:", error);
 
