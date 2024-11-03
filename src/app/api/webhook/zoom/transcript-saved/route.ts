@@ -68,7 +68,8 @@ async function downloadAndStoreVTT(transcript: Transcript) {
     newTranscripts.push({
       meeting_id: existingMeeting.id,
       original_transcript_file_url: record_file.download_url,
-      transcripts: transcriptText
+      transcripts: transcriptText,
+      parsed_transcripts: vttToPlainText(transcriptText)
     })
   }
 
@@ -80,3 +81,18 @@ async function downloadAndStoreVTT(transcript: Transcript) {
 
 }
 
+
+function vttToPlainText(vttContent: string): string {
+  // Split the VTT content by newlines
+  const lines = vttContent.split('\n');
+
+  // Filter out lines with timestamps and empty lines, keep only the text
+  const transcriptLines = lines.filter(line => 
+      !line.match(/^\d+$/) &&           // Remove section numbers
+      !line.match(/^\d{2}:\d{2}:\d{2}/) && // Remove timestamps
+      line.trim() !== ''                // Remove empty lines
+  );
+
+  // Join the filtered lines into a single string with newline separators
+  return transcriptLines.join('\n');
+}

@@ -19,11 +19,11 @@ model test_input {
 }
 
 model meeting {
-  id         Int      @id @default(autoincrement())
-  topic      String
-  agenda     String
-  start_time DateTime
-  duration   Int
+  id         Int       @id @default(autoincrement())
+  topic      String?
+  agenda     String?
+  start_time DateTime?
+  duration   Int?
 
   create_at DateTime @default(now())
   zoom_url  String
@@ -41,6 +41,7 @@ model meeting_transcript {
 
   // other data
   transcripts                  String? @db.Text
+  parsed_transcripts           String? @db.Text
   original_transcript_file_url String?
 }
 
@@ -51,8 +52,9 @@ model meeting_recorder {
   create_at      DateTime @default(now())
 
   // other data
-  file_password String?
+  file_password     String?
   original_file_url String?
+  uploaded_file_url String?
 }
 
 model zoom_access_token {

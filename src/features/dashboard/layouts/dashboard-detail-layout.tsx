@@ -9,12 +9,26 @@ import { useParams } from 'next/navigation'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { CopyIcon, ExternalLink, EyeIcon } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "sonner"
 
 export default function Component() {
   const params = useParams()
 
   const id = params.id as string
   const { data: meeting, isLoading, isError, error, refetch } = useQuery({ queryKey: ['meeting_detail', id], queryFn: () => getMeetingByID({ id }), enabled: !!id });
+
+  const handleCopy = (link: string) => {
+    navigator.clipboard.writeText(link);
+    toast.success("Link copied!", {
+      position: "bottom-center"
+    })
+  }
+
+  const handleGoToLink = (link: string) => {
+    window.open(link, "_blank")
+  }
 
   if (isLoading) return <div>Loading...</div>
   if (isError) return <div>Error</div>
@@ -106,7 +120,7 @@ export default function Component() {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="link">
-                            {transcript.transcripts.substring(0, 50)}...
+                            {transcript.parsed_transcripts?.substring(0, 50)}...
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -114,7 +128,7 @@ export default function Component() {
                             <DialogTitle>Full Transcript</DialogTitle>
                           </DialogHeader>
                           <div className="mt-4 whitespace-pre-wrap">
-                            {transcript.transcripts}
+                            {transcript.parsed_transcripts}
                           </div>
                         </DialogContent>
                       </Dialog>
@@ -138,8 +152,9 @@ export default function Component() {
                 <TableRow>
                   <TableHead>ID</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead>File URL</TableHead>
-                  <TableHead>File Password</TableHead>
+                  <TableHead>Zoom File URL</TableHead>
+                  <TableHead>Zoom File Password</TableHead>
+                  <TableHead>Public Video</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -147,8 +162,38 @@ export default function Component() {
                   <TableRow key={recording.id}>
                     <TableCell>{recording.id}</TableCell>
                     <TableCell>{recording.create_at}</TableCell>
-                    <TableCell>{recording.original_file_url}</TableCell>
+                    <TableCell className="flex items-center gap-x-2">
+                      <div className='flex gap-x-1'>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant={"outline"} size={"icon"} onClick={() => handleCopy(recording.original_file_url)}>
+                              <CopyIcon />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copy link</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant={"outline"} size={"icon"} onClick={() => handleGoToLink(recording.original_file_url)}>
+                              <ExternalLink />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Open link</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      {recording.original_file_url.substring(0, 50)}...
+                    </TableCell>
                     <TableCell>{recording.file_password}</TableCell>
+                    <TableCell>
+                      <Button disabled={!recording.uploaded_file_url} variant={"outline"} onClick={() => window.open(recording.uploaded_file_url, "_blank")}>
+                        <EyeIcon />
+                        Watch
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

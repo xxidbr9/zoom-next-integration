@@ -1,7 +1,7 @@
 'use client'
 
-import { ChangeEvent, useEffect, useState } from 'react'
-import { Eye, Plus, Search, CalendarIcon, LogOut } from 'lucide-react'
+import { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { Eye, Plus, Search, CalendarIcon, LogOut, CopyIcon, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogOverlay,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
@@ -44,37 +45,49 @@ import {
 import { createMeetingLink, getAllMeetings, Meeting } from '@/features/zoom/networks'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 
 const formSchema = z.object({
-  topic: z.string().min(1, { message: "Topic is required" }),
+  topic: z.string().optional(),
   agenda: z.string().optional(),
-  date: z.date({
-    required_error: "Meeting date is required",
-  }),
-  duration: z.number().min(1, { message: "Duration must be at least 1 minute" }),
+  date: z.date().optional(),
+  duration: z.number().optional(),
 })
 
 
 export default function Component() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [isModalNewOpen, setIsModalNewOpen] = useState(false)
+  const [isNewMeetingLoading, setIsNewMeetingLoading] = useState(false)
+
   // const [selectedMeeting, setSelectedMeeting] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [newLink, setNewLink] = useState("http://localhost:3000");
 
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['meeting'], queryFn: getAllMeetings, });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      topic: "",
-      agenda: "",
-      duration: 30,
     },
   })
   useEffect(() => {
     setMeetings(data?.data || [])
   }, [data])
   const router = useRouter()
+
+  const handleCopy = (link: string) => {
+    navigator.clipboard.writeText(link);
+    toast.success("Link copied!", {
+      position: "bottom-center"
+    })
+  }
+
+  const handleGoToLink = (link: string) => {
+    window.open(link, "_blank")
+  }
   // Handling loading state
   if (isLoading) {
     return <div>Loading...</div>;
@@ -104,7 +117,7 @@ export default function Component() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const resp = await createMeetingLink({ agenda: values.agenda || "", duration: values.duration, start_time: values.date, topic: values.topic })
+      const resp = await createMeetingLink({ agenda: values.agenda, duration: values.duration, start_time: values.date, topic: values.topic })
       toast.success('Meeting has been created')
       setIsModalNewOpen(false)
       refetch()
@@ -112,10 +125,28 @@ export default function Component() {
     }
   }
 
-  const handleNewMeeting = () => {
+
+
+  const handleNewMeeting = async (open: boolean) => {
+    if (open) {
+      try {
+        setIsNewMeetingLoading(true)
+        const resp = await createMeetingLink()
+        console.log({ resp });
+        setNewLink(resp?.data.meeting.zoom_url as string)
+        setIsNewMeetingLoading(false)
+        setIsModalNewOpen(open)
+        toast.success("New meeting created!")
+        refetch()
+      } catch (error) {
+        toast.error("Can't create new meeting!")
+      }
+      // setIsModalNewOpen(open)
+
+    } else {
+      setIsModalNewOpen(open)
+    }
     // Implement new meeting functionality
-    setIsModalNewOpen(true)
-    console.log('New meeting button clicked')
   }
 
 
@@ -155,9 +186,52 @@ export default function Component() {
           {/* <Button onClick={handleLogout} variant={"outline"}>
             <LogOut className="mr-2 h-4 w-4" /> Sign Out
           </Button> */}
-          <Button onClick={handleNewMeeting}>
+          {/* <Button onClick={handleNewMeeting}>
             <Plus className="mr-2 h-4 w-4" /> New Meeting
-          </Button>
+          </Button> */}
+          <AlertDialog open={isModalNewOpen} onOpenChange={handleNewMeeting}>
+            <AlertDialogTrigger asChild>
+              <Button disabled={isNewMeetingLoading}>
+                {isNewMeetingLoading ? (<LoadingSpinner />) : (<Plus className="mr-2 h-4 w-4" />)}
+                New Meeting
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>New Meeting Created!</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className='flex flex-row gap-x-1'>
+                    <Input defaultValue={newLink} readOnly />
+                    <div className='flex gap-x-1'>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant={"outline"} size={"icon"} onClick={() => handleCopy(newLink)}>
+                            <CopyIcon />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Copy link</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant={"outline"} size={"icon"} onClick={() => handleGoToLink(newLink)}>
+                            <ExternalLink />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Open link</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction>Close</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -166,10 +240,11 @@ export default function Component() {
           <TableRow>
             <TableHead>ID</TableHead>
             <TableHead>Topic</TableHead>
-            <TableHead>Agenda</TableHead>
+            {/* <TableHead>Agenda</TableHead> */}
             <TableHead>Meeting Link</TableHead>
-            <TableHead>Start Time</TableHead>
-            <TableHead>Duration (min)</TableHead>
+            {/* <TableHead>Start Time</TableHead> */}
+            {/* <TableHead>Duration (min)</TableHead> */}
+            <TableHead>Zoom ID</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -181,12 +256,32 @@ export default function Component() {
               <TableCell>
                 <HighlightedText text={meeting.topic} highlight={searchTerm} />
               </TableCell>
-              <TableCell>
-                <HighlightedText text={meeting.agenda} highlight={searchTerm} />
+              <TableCell className='flex gap-x-2 items-center'>
+                <div className='flex gap-x-1'>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant={"outline"} size={"icon"} onClick={() => handleCopy(meeting.zoom_url)}>
+                        <CopyIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy link</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant={"outline"} size={"icon"} onClick={() => handleGoToLink(meeting.zoom_url)}>
+                        <ExternalLink />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Open link</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                {meeting.zoom_url}
               </TableCell>
-              <TableCell>{meeting.zoom_url}</TableCell>
-              <TableCell>{format(meeting.start_time, 'yyyy-MM-dd HH:mm')}</TableCell>
-              <TableCell>{meeting.duration}</TableCell>
+              <TableCell>{meeting.zoom_id}</TableCell>
               <TableCell>{format(meeting.create_at, 'yyyy-MM-dd HH:mm')}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
@@ -205,96 +300,6 @@ export default function Component() {
           ))}
         </TableBody>
       </Table>
-
-      <Dialog open={isModalNewOpen} onOpenChange={setIsModalNewOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>New Meeting Details</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="topic"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Topic</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter meeting topic" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="agenda"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Agenda</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter meeting agenda" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration (minutes)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Create Meeting</Button>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
@@ -316,5 +321,25 @@ const HighlightedText = ({ text, highlight }: { text: string; highlight: string 
         )
       )}
     </span>
+  )
+}
+
+export const LoadingSpinner = () => {
+  return (
+
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("animate-spin")}
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
   )
 }

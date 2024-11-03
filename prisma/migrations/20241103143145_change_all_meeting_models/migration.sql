@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "meeting" ALTER COLUMN "topic" DROP NOT NULL,
+ALTER COLUMN "agenda" DROP NOT NULL,
+ALTER COLUMN "start_time" DROP NOT NULL,
+ALTER COLUMN "duration" DROP NOT NULL;

@@ -22,6 +22,7 @@ export interface MeetingTranscript {
   meeting_id: number
   create_at: string
   transcripts: string
+  parsed_transcripts: string
   original_transcript_file_url: string
 }
 
@@ -31,6 +32,7 @@ export interface MeetingRecorder {
   create_at: string
   file_password: string
   original_file_url: string
+  uploaded_file_url: string
 }
 
 
