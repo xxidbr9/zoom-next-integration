@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
       }
     }
     if (body.event === "recording.transcript_completed") {
+      await new Promise((res, rej) => {
+        setTimeout(() => res("OK"), 1000)
+      })
       await downloadAndStoreVTT(body);
     }
     // Return a 200 OK response to acknowledge receipt
