@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { CopyIcon, ExternalLink, EyeIcon } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
+import { useState } from "react"
 
 export default function Component() {
   const params = useParams()
@@ -189,10 +190,7 @@ export default function Component() {
                     </TableCell>
                     <TableCell>{recording.file_password}</TableCell>
                     <TableCell>
-                      <Button disabled={!recording.uploaded_file_url} variant={"outline"} onClick={() => window.open(recording.uploaded_file_url, "_blank")}>
-                        <EyeIcon />
-                        Watch
-                      </Button>
+                      <ModalPopUp recording={recording}/>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -202,5 +200,42 @@ export default function Component() {
         </Card>
       )}
     </div>
+  )
+}
+
+interface Recording {
+  uploaded_file_url: string
+}
+
+function ModalPopUp({ recording }: { recording: Recording }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <>
+      <Button
+        disabled={!recording.uploaded_file_url}
+        variant="outline"
+        onClick={() => setIsOpen(true)}
+      >
+        <EyeIcon className="w-4 h-4 mr-2" />
+        Watch
+      </Button>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Video Playback</DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video">
+            <video
+              src={recording.uploaded_file_url}
+              controls
+              className="w-full h-full"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

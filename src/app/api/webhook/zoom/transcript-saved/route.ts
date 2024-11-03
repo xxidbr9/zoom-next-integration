@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto'
 import { Transcript } from '@/features/zoom/models';
 import prisma from '@/lib/prisma';
+import { convertVttToJson } from '@/lib/vttToJson';
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,10 +70,9 @@ async function downloadAndStoreVTT(transcript: Transcript) {
       meeting_id: existingMeeting.id,
       original_transcript_file_url: record_file.download_url,
       transcripts: transcriptText,
-      parsed_transcripts: vttToPlainText(transcriptText)
+      parsed_transcripts: await vttToPlainText(transcriptText)
     })
   }
-
 
   await prisma.meeting_transcript.createMany({
     skipDuplicates: true,
@@ -82,17 +82,8 @@ async function downloadAndStoreVTT(transcript: Transcript) {
 }
 
 
-function vttToPlainText(vttContent: string): string {
-  // Split the VTT content by newlines
-  const lines = vttContent.split('\n');
-
-  // Filter out lines with timestamps and empty lines, keep only the text
-  const transcriptLines = lines.filter(line => 
-      !line.match(/^\d+$/) &&           // Remove section numbers
-      !line.match(/^\d{2}:\d{2}:\d{2}/) && // Remove timestamps
-      line.trim() !== ''                // Remove empty lines
-  );
-
-  // Join the filtered lines into a single string with newline separators
-  return transcriptLines.join('\n');
+async function vttToPlainText(vttContent: string): Promise<string> {
+  const converted = await convertVttToJson(vttContent) as { part: string }[]
+  const results = converted.reduce((f, n) => f += n.part, "")
+  return results
 }
