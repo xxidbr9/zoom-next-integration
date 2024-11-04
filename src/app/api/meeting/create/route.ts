@@ -72,7 +72,7 @@ const createMeeting = async (data?: { topic: string, start_time: string, agenda:
       approval_type: 2,
       jbh_time: 0,
       audio: 'both',
-      auto_recording: 'none',
+      auto_recording: 'cloud',
       registrants_confirmation_email: false,
       registration_type: 3
     }
